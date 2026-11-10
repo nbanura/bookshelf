@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#8a3b2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bookshelf">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Bookshelf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #f6f3ee; --card: #fffdf9; --ink: #1f1a17; --muted: #6d645c; --faint: #9a9087;
+    --line: #e6dfd5; --soft: #efe9e0; --acc: #8a3b2a; --acc-ink: #fff; --acc-soft: #f4e4de;
+    --ok: #2f6b45; --ok-soft: #e1efe5; --warn: #8a6214; --warn-soft: #f6ecd5; --shade: rgba(31,26,23,.42);
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #181513; --card: #211d1a; --ink: #f1ebe4; --muted: #b3a89d; --faint: #85796e;
+    --line: #36302b; --soft: #2a2521; --acc: #e08d74; --acc-ink: #1d1411; --acc-soft: #3a2621;
+    --ok: #8fcfa4; --ok-soft: #1f3226; --warn: #e3bd6d; --warn-soft: #3a2f18; --shade: rgba(0,0,0,.6); color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #181513; --card: #211d1a; --ink: #f1ebe4; --muted: #b3a89d; --faint: #85796e;
+    --line: #36302b; --soft: #2a2521; --acc: #e08d74; --acc-ink: #1d1411; --acc-soft: #3a2621;
+    --ok: #8fcfa4; --ok-soft: #1f3226; --warn: #e3bd6d; --warn-soft: #3a2f18; --shade: rgba(0,0,0,.6); color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 22px 60px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+
+  header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-family: var(--serif); font-weight: 650; font-size: 30px; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 2px 0 0; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { appearance: none; border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 8px 13px;
+         cursor: pointer; font-weight: 500; }
+  .btn:hover { border-color: var(--faint); }
+  .btn.pri { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); font-weight: 600; }
+  .btn.ghost { background: none; }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn.danger { color: var(--acc); }
+  .btn:disabled { opacity: .55; cursor: default; }
+
+  .help { margin: 16px 0 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; color: var(--muted); }
+  .help b { color: var(--ink); font-weight: 600; }
+  .help p { margin: 2px 0; }
+  .btn.pri-soft { background: var(--acc-soft); border-color: var(--acc-soft); color: var(--acc); font-weight: 600; }
+  .btn.drive-on { color: var(--ok); border-color: var(--ok-soft); }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; }
+  .store-note { font-size: 12.5px; color: var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 6px 10px; margin-top: 10px; }
+
+  .panel { margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .finder { padding: 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; stroke: var(--faint); fill: none; stroke-width: 2; }
+  .search input { width: 100%; padding: 12px 12px 12px 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 15px; }
+  .search input:focus, .f input:focus, .f select:focus, .f textarea:focus, .filters select:focus { outline: 2px solid var(--acc); outline-offset: -1px; border-color: transparent; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .filters select, details.multi summary { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; background: var(--card); font-size: 13px; max-width: 100%; }
+  details.multi { position: relative; }
+  details.multi summary { list-style: none; cursor: pointer; }
+  details.multi summary::-webkit-details-marker { display: none; }
+  .multibox { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; background: var(--card); border: 1px solid var(--line);
+              border-radius: 10px; padding: 8px; min-width: 180px; box-shadow: 0 10px 30px var(--shade); display: grid; gap: 2px; }
+  .multibox label { display: flex; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+  .multibox label:hover { background: var(--soft); }
+  .said { color: var(--muted); font-size: 12.5px; margin: 0; }
+
+  .tabbar { display: flex; gap: 2px; overflow-x: auto; padding: 0 10px; border-bottom: 1px solid var(--line); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--card); z-index: 10; }
+  .tabbar button { appearance: none; border: 0; background: none; padding: 12px 10px; cursor: pointer; color: var(--muted);
+                   border-bottom: 2px solid transparent; white-space: nowrap; font-weight: 500; }
+  .tabbar button:hover { color: var(--ink); }
+  .tabbar button.on { color: var(--ink); font-weight: 650; border-bottom-color: var(--ink); }
+  .tabbar button.act { color: var(--acc); font-weight: 650; }
+  .count { font-size: 10.5px; font-weight: 700; background: var(--soft); color: var(--muted); border-radius: 99px; padding: 1px 7px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+  .list { display: grid; }
+  .row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .row:hover { background: var(--soft); }
+  .row:last-child { border-bottom: 0; }
+  .cover { width: 44px; height: 60px; border-radius: 4px; object-fit: cover; background: var(--soft); display: block; box-shadow: 0 1px 2px var(--shade); }
+  .cover.none { display: grid; place-items: center; font-family: var(--serif); font-weight: 650; color: var(--acc); background: var(--acc-soft); font-size: 15px; box-shadow: none; }
+  .t { font-family: var(--serif); font-weight: 650; font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .author { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; cursor: pointer; background: none; border: 0; padding: 0; }
+  .author:hover { text-decoration-color: var(--acc); }
+  .chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .chip { font-size: 11px; border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; color: var(--muted); white-space: nowrap; }
+  .pill { font-size: 11px; font-weight: 600; border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
+  .pill.Read { background: var(--ok-soft); color: var(--ok); }
+  .pill.Reading { background: var(--warn-soft); color: var(--warn); }
+  .pill.Not { background: var(--soft); color: var(--muted); }
+  .pill.wish { background: var(--acc-soft); color: var(--acc); }
+  .side { display: grid; gap: 5px; justify-items: end; }
+  .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+  .grouprow { padding: 9px 14px; background: var(--soft); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .simple { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--line); cursor: pointer; gap: 10px; }
+  .simple:hover { background: var(--soft); }
+
+  /* sheet */
+  .shade { position: fixed; inset: 0; background: var(--shade); z-index: 50; display: flex; justify-content: flex-end; }
+  .sheet { width: min(640px, 100%); height: 100%; background: var(--card); overflow: auto; display: flex; flex-direction: column;
+           padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .sheet .hd { padding: 18px 20px 6px; }
+  .sheet h2 { font-family: var(--serif); font-weight: 650; font-size: 22px; margin: 0; overflow-wrap: anywhere; }
+  .sheet .tip { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+  .sheet .body { padding: 10px 20px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
+  .sheet .ft { position: sticky; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .sheet .ft .left { margin-right: auto; }
+  .f { display: grid; gap: 5px; min-width: 0; }
+  .f.full { grid-column: 1 / -1; }
+  .f > label, .lbl { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+  .f input, .f select, .f textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: var(--bg); font-size: 14px; }
+  .f textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  .toggles { display: flex; gap: 6px; flex-wrap: wrap; }
+  .toggles button { border: 1px solid var(--line); background: var(--bg); border-radius: 99px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .toggles button.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+  .stars { display: flex; gap: 2px; }
+  .stars button { border: 0; background: none; font-size: 22px; line-height: 1; cursor: pointer; color: var(--line); padding: 2px; }
+  .stars button.on { color: var(--warn); }
+  .coverpick { display: flex; gap: 12px; align-items: center; }
+  .coverpick .cover { width: 60px; height: 82px; }
+  .warnbox { grid-column: 1 / -1; background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 11px; font-size: 13px; }
+  .confirm { background: var(--acc-soft); color: var(--acc); border-radius: 8px; padding: 8px 11px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
+  .kv { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .kv div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; min-width: 0; overflow-wrap: anywhere; }
+  .kv span { display: block; font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .summary { grid-column: 1 / -1; line-height: 1.6; max-width: 65ch; }
+  .summary h4 { font-family: var(--serif); font-size: 16px; margin: 14px 0 4px; }
+  .summary p { margin: 6px 0; }
+  .summary ul { margin: 6px 0; padding-left: 20px; }
+  .bigcover { width: 96px; height: 132px; }
+  .viewtop { grid-column: 1 / -1; display: flex; gap: 14px; align-items: flex-start; }
+  .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--card);
+           padding: 9px 16px; border-radius: 10px; z-index: 90; font-size: 13.5px; max-width: calc(100% - 32px); }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 25px; }
+    .sheet .body { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 40px minmax(0, 1fr); }
+    .row .side { grid-column: 2; justify-items: start; }
+    .chips { justify-content: flex-start; }
+    .cover { width: 40px; height: 55px; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Bookshelf</h1>
+      <p class="sub" id="sub">Your library</p>
+    </div>
+    <div class="tools">
+      <button class="btn sm hidden" id="b-drive">Connect Google Drive</button>
+      <button class="btn sm ghost" id="b-import">Import</button>
+      <button class="btn sm ghost" id="b-export">Export</button>
+      <button class="btn sm pri" id="b-add">+ Add a book</button>
+    </div>
+  </header>
+
+  <div class="help">
+    <p><b>Function:</b> one place for every book you own, are reading or want to buy, so you can check in a second whether you already have it.</p>
+    <p><b>Usage:</b> type any part of a title, author or category in the search. Tap a book to open it, tap an author to see all their books. Press <b>N</b> for a new book and <b>/</b> to search. Tap <b>Connect Google Drive</b> once to keep your books in your own Drive and see them on every device.</p>
+  </div>
+  <div class="store-note hidden" id="store-note"></div>
+
+  <div class="panel">
+    <div class="finder">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" autocomplete="off" placeholder="Search a title, an author, a category — or part of any of them" aria-label="Search books">
+      </div>
+      <div class="filters">
+        <select id="f-cat" aria-label="Category"><option value="">Every category</option></select>
+        <details class="multi" id="f-fmt-wrap"><summary id="f-fmt-said">Every format</summary><div class="multibox" id="f-fmt-box"></div></details>
+        <select id="f-loc" aria-label="Where"><option value="">Everywhere</option></select>
+        <select id="f-lang" aria-label="Language"><option value="">Any language</option></select>
+        <button class="btn sm ghost hidden" id="f-clear">Clear filters</button>
+      </div>
+      <p class="said" id="said"></p>
+    </div>
+    <div class="tabbar" id="tabbar"></div>
+    <div class="list" id="list"></div>
+    <div class="empty hidden" id="empty"></div>
+  </div>
+</div>
+
+<input type="file" id="file-cover" accept="image/*" class="hidden">
+<input type="file" id="file-import" accept=".csv,.json,text/csv,application/json" class="hidden">
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function toast(msg) { var t = el('div', 'toast', msg); document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200); }
+
+  var STATUSES = ['Not read', 'Reading', 'Read'];
+  var FORMATS = ['Paperback', 'Hardcover', 'Kindle', 'PDF', 'Audiobook'];
+  var LANGS = ['English', 'Hindi'];
+
+  /* ---------------- settings: paste the Google OAuth client id here ---------------- */
+  var GOOGLE_CLIENT_ID = '966533275425-1n8qpa5i9v448dapv21qut6k3avrs01n.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  var DRIVE_FILE_NAME = 'Bookshelf - my books.json';
+
+  /* ---------------- storage: this device (IndexedDB) + the reader's own Google Drive ---------------- */
+  var BOOKS = [];            // [{id, ...fields}]
+  var TOMBS = {};            // id -> time it was removed (so other devices remove it too)
+  var LS_KEY = 'bookshelf-books-v1';   // old version kept books here
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  var dbp = null;
+  function idb() {
+    if (!dbp) dbp = new Promise(function (res, rej) {
+      var r = indexedDB.open('bookshelf', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('kv'); };
+      r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); };
+    });
+    return dbp;
+  }
+  function kv(mode, fn) { return idb().then(function (db) { return new Promise(function (res, rej) {
+    var q = fn(db.transaction('kv', mode).objectStore('kv')); q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); }; }); }); }
+  function persist() {
+    return kv('readwrite', function (s) { return s.put({ books: BOOKS, tombs: TOMBS }, 'library'); })
+      .catch(function () { toast('This device would not save. Export a backup.'); });
+  }
+
+  var store = {
+    save: function (id, data) {
+      var i = BOOKS.findIndex(function (b) { return b.id === id; });
+      var row = Object.assign({ id: id }, data);
+      if (i >= 0) BOOKS[i] = row; else BOOKS.push(row);
+      delete TOMBS[id];
+      render(); queueSync(); return persist();
+    },
+    remove: function (id) {
+      BOOKS = BOOKS.filter(function (b) { return b.id !== id; });
+      TOMBS[id] = new Date().toISOString();
+      render(); queueSync(); return persist();
+    },
+  };
+
+  function startDb() {
+    kv('readonly', function (s) { return s.get('library'); }).then(function (lib) {
+      if (lib) { BOOKS = lib.books || []; TOMBS = lib.tombs || {}; }
+      else {
+        try { BOOKS = JSON.parse(lsGet(LS_KEY) || '[]'); } catch (e) { BOOKS = []; }
+        if (BOOKS.length) persist();
+      }
+      render(); driveBoot();
+    }).catch(function () {
+      note('This browser is not letting the app save (private window?). Use Export to keep a copy.');
+      render();
+    });
+  }
+  function note(text) { var n = $('store-note'); n.textContent = text || ''; n.classList.toggle('hidden', !text); }
+
+  /* ---------------- Google Drive sync: one file in the reader's own Drive ---------------- */
+  var TOKEN = null, TOKEN_EXP = 0, FILE_ID = lsGet('bookshelf-drive-file'), SYNCING = false, AGAIN = false, syncTimer = null, LAST_SYNC = null;
+  var CONNECTED = lsGet('bookshelf-drive') === '1';
+  var ACCOUNT = lsGet('bookshelf-drive-email') || '';
+  var gisP = null;
+  function loadGis() {
+    if (!gisP) gisP = new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+      s.onload = function () { res(); }; s.onerror = function () { gisP = null; rej({ msg: 'offline' }); }; document.head.appendChild(s);
+    });
+    return gisP;
+  }
+  function tokenOk() { return TOKEN && Date.now() < TOKEN_EXP - 60000; }
+  function getToken(pick) {
+    if (tokenOk()) return Promise.resolve(TOKEN);
+    return loadGis().then(function () { return new Promise(function (res, rej) {
+      var c = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID, scope: DRIVE_SCOPE, hint: ACCOUNT || undefined,
+        callback: function (r) {
+          if (r.error) return rej({ msg: r.error });
+          if (!google.accounts.oauth2.hasGrantedAllScopes(r, DRIVE_SCOPE)) return rej({ msg: 'no_drive' });
+          TOKEN = r.access_token; TOKEN_EXP = Date.now() + (r.expires_in || 3600) * 1000; res(TOKEN);
+        },
+        error_callback: function (e) { rej({ msg: (e && e.type) || 'popup' }); },
+      });
+      c.requestAccessToken({ prompt: pick ? 'select_account' : '' });
+    }); });
+  }
+  function api(method, url, body, type) {
+    var h = { Authorization: 'Bearer ' + TOKEN }; if (type) h['Content-Type'] = type;
+    return fetch(url, { method: method, headers: h, body: body }).then(function (r) {
+      if (r.status === 401) { TOKEN = null; throw { msg: 'expired' }; }
+      if (!r.ok) throw { msg: 'drive_' + r.status, status: r.status };
+      return r.status === 204 ? null : r.json();
+    });
+  }
+  var G = 'https://www.googleapis.com/drive/v3/files', U = 'https://www.googleapis.com/upload/drive/v3/files';
+  function findFile() {
+    var tryId = FILE_ID ? api('GET', G + '/' + FILE_ID + '?fields=id,trashed').then(function (f) { return f && !f.trashed ? f.id : null; }, function () { return null; }) : Promise.resolve(null);
+    return tryId.then(function (id) {
+      if (id) return id;
+      var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
+      return api('GET', G + '?q=' + q + '&orderBy=modifiedTime desc&fields=files(id)&spaces=drive').then(function (r) { return r.files && r.files[0] ? r.files[0].id : null; });
+    });
+  }
+  function mergeIn(remote) {
+    if (!remote) return;
+    var rt = remote.tombs || {};
+    Object.keys(rt).forEach(function (id) { if (!TOMBS[id] || rt[id] > TOMBS[id]) TOMBS[id] = rt[id]; });
+    var map = new Map(BOOKS.map(function (b) { return [b.id, b]; }));
+    (remote.books || []).forEach(function (rb) {
+      var lb = map.get(rb.id);
+      if (!lb || String(rb.updatedAt || '') > String(lb.updatedAt || '')) map.set(rb.id, rb);
+    });
+    Object.keys(TOMBS).forEach(function (id) { var b = map.get(id); if (b && String(b.updatedAt || '') <= TOMBS[id]) map.delete(id); else if (b) delete TOMBS[id]; });
+    var cut = new Date(Date.now() - 180 * 864e5).toISOString();
+    Object.keys(TOMBS).forEach(function (id) { if (TOMBS[id] < cut) delete TOMBS[id]; });
+    BOOKS = Array.from(map.values());
+  }
+  function upload() {
+    var body = JSON.stringify({ app: 'bookshelf', version: 2, savedAt: new Date().toISOString(), books: BOOKS, tombs: TOMBS });
+    if (FILE_ID) return api('PATCH', U + '/' + FILE_ID + '?uploadType=media&fields=id', body, 'application/json');
+    var b = 'bk' + Math.random().toString(36).slice(2);
+    var meta = JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json', description: 'Your Bookshelf library. The Bookshelf app reads and saves this file. Do not edit by hand.' });
+    var multi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+    return api('POST', U + '?uploadType=multipart&fields=id', multi, 'multipart/related; boundary=' + b).then(function (f) { FILE_ID = f.id; lsSet('bookshelf-drive-file', f.id); });
+  }
+  function sync(pick) {
+    if (!GOOGLE_CLIENT_ID) return Promise.resolve();
+    if (SYNCING) { AGAIN = true; return Promise.resolve(); }
+    SYNCING = true; AGAIN = false; drawDrive('Saving to Drive…');
+    var p = getToken(pick).then(function () {
+      return api('GET', 'https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)');
+    }).then(function (a) {
+      var email = (a && a.user && a.user.emailAddress) || '';
+      if (ACCOUNT && email && email !== ACCOUNT) { BOOKS = []; TOMBS = {}; FILE_ID = null; lsSet('bookshelf-drive-file', null); }
+      ACCOUNT = email; lsSet('bookshelf-drive-email', email);
+      return findFile();
+    }).then(function (id) {
+      if (id !== FILE_ID) { FILE_ID = id; lsSet('bookshelf-drive-file', id); }
+      return id ? fetch(G + '/' + id + '?alt=media', { headers: { Authorization: 'Bearer ' + TOKEN } }).then(function (r) { if (!r.ok) throw { msg: 'drive_' + r.status }; return r.json(); }) : null;
+    }).then(function (remote) {
+      mergeIn(remote); return upload();
+    }).then(function () {
+      CONNECTED = true; lsSet('bookshelf-drive', '1'); LAST_SYNC = new Date();
+      persist(); render(); drawDrive(); note('');
+    }).catch(function (e) {
+      var m = (e && e.msg) || '';
+      if (m === 'popup_failed_to_open' || m === 'popup' || m === 'expired' || m === 'immediate_failed' || m === 'interaction_required')
+        drawDrive('Tap to sync');
+      else if (m === 'offline' || e instanceof TypeError) drawDrive('Offline — saved on this device');
+      else if (m === 'access_denied' || m === 'popup_closed' || m === 'no_drive') { drawDrive(); if (!CONNECTED) toast('Drive was not connected. Tick the Drive box when Google asks.'); }
+      else { drawDrive('Drive problem — tap to retry'); }
+    }).then(function () { SYNCING = false; if (AGAIN) queueSync(); });
+    return p;
+  }
+  function queueSync() {
+    if (!CONNECTED) return;
+    clearTimeout(syncTimer);
+    if (!tokenOk()) { sync(false); return; }   // still inside the tap, so Google may show its box
+    syncTimer = setTimeout(function () { sync(false); }, 1500);
+  }
+  function drawDrive(state) {
+    var b = $('b-drive'); if (!b) return;
+    if (!GOOGLE_CLIENT_ID) { b.className = 'btn sm hidden'; return; }
+    if (!CONNECTED) { b.textContent = 'Connect Google Drive'; b.className = 'btn sm pri-soft'; return; }
+    b.className = 'btn sm ghost drive-on';
+    b.textContent = state || (LAST_SYNC ? '✓ Drive · ' + LAST_SYNC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '✓ Drive');
+  }
+  function driveBoot() {
+    drawDrive();
+    if (!GOOGLE_CLIENT_ID || !CONNECTED) return;
+    sync(false);
+    // A browser may block Google's box when nothing was tapped; the first tap anywhere retries.
+    var once = function () { document.removeEventListener('pointerdown', once, true); if (!LAST_SYNC && !SYNCING) sync(false); };
+    document.addEventListener('pointerdown', once, true);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && CONNECTED && tokenOk()) sync(false); });
+  }
+  function openDrive() {
+    if (!CONNECTED) { sync(true); return; }
+    var s = sheet('Google Drive', 'Your books are kept in your own Google Drive, in the file “' + DRIVE_FILE_NAME + '”. Open this app on any phone or computer and connect the same Google account to see them.');
+    s.body.appendChild(el('p', 'tip', ACCOUNT ? 'Connected as ' + ACCOUNT + '.' : 'Connected.'));
+    s.body.appendChild(el('p', 'tip', LAST_SYNC ? 'Last saved to Drive at ' + LAST_SYNC.toLocaleTimeString() + '.' : 'Not saved to Drive yet in this visit.'));
+    var off = el('button', 'btn ghost sm danger left', 'Disconnect');
+    off.addEventListener('click', function () {
+      if (TOKEN && window.google) try { google.accounts.oauth2.revoke(TOKEN, function () {}); } catch (e) {}
+      TOKEN = null; CONNECTED = false; LAST_SYNC = null; lsSet('bookshelf-drive', null);
+      closeSheet(); drawDrive(); toast('Disconnected. Your books stay on this device and in your Drive file.');
+    });
+    var now = el('button', 'btn pri', 'Sync now'); now.addEventListener('click', function () { closeSheet(); sync(false); });
+    var c = el('button', 'btn ghost', 'Close'); c.addEventListener('click', closeSheet);
+    s.ft.appendChild(off); s.ft.appendChild(c); s.ft.appendChild(now);
+  }
+
+  function newId() { return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  /* ---------------- search ---------------- */
+  // Accents and case do not matter, and every word must be found somewhere in the book.
+  function fold(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function hay(b) { return fold([b.title, b.author, b.category, (b.formats || []).join(' '), b.location, b.language, b.notes].join(' | ')); }
+  function splitList(s) { return String(s || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function uniq(arr) { var m = new Map(); arr.forEach(function (v) { if (v) m.set(v.toLowerCase(), v); }); return Array.from(m.values()).sort(function (a, b) { return a.localeCompare(b); }); }
+
+  var TAB = 'all', AUTHOR = '', FMT = [];
+  try { TAB = localStorage.getItem('bookshelf-tab') || 'all'; } catch (e) {}
+
+  function filtered(ignoreTab) {
+    var words = fold($('q').value).split(/\s+/).filter(Boolean);
+    var cat = $('f-cat').value, loc = $('f-loc').value, lang = $('f-lang').value;
+    return BOOKS.filter(function (b) {
+      if (words.length) { var h = hay(b); if (!words.every(function (w) { return h.indexOf(w) >= 0; })) return false; }
+      if (cat && splitList(b.category).map(fold).indexOf(fold(cat)) < 0) return false;
+      if (loc && splitList(b.location).map(fold).indexOf(fold(loc)) < 0) return false;
+      if (lang && fold(b.language) !== fold(lang)) return false;
+      if (FMT.length && !(b.formats || []).some(function (f) { return FMT.indexOf(f) >= 0; })) return false;
+      if (AUTHOR && fold(b.author) !== fold(AUTHOR)) return false;
+      if (ignoreTab) return true;
+      if (TAB === 'reading') return b.status === 'Reading';
+      if (TAB === 'read') return b.status === 'Read';
+      if (TAB === 'unread') return b.status !== 'Read' && b.status !== 'Reading' && !b.wish;
+      if (TAB === 'wish') return !!b.wish;
+      return true;
+    }).sort(function (a, b) { return String(a.title || '').localeCompare(String(b.title || '')); });
+  }
+  function anyFilter() { return !!($('q').value.trim() || $('f-cat').value || $('f-loc').value || $('f-lang').value || FMT.length || AUTHOR); }
+
+  /* ---------------- drawing ---------------- */
+  function coverEl(b, cls) {
+    if (b.cover) { var im = el('img', 'cover' + (cls ? ' ' + cls : '')); im.src = b.cover; im.alt = ''; im.loading = 'lazy'; return im; }
+    return el('div', 'cover none' + (cls ? ' ' + cls : ''), String(b.title || '?').replace(/^(the|a|an)\s+/i, '').slice(0, 2).toUpperCase());
+  }
+  function authorBtn(name) {
+    var a = el('button', 'author', name); a.type = 'button';
+    a.addEventListener('click', function (e) { e.stopPropagation(); showAuthor(name); });
+    return a;
+  }
+  function showAuthor(name) { AUTHOR = name; TAB = 'all'; closeSheet(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+  function bookRow(b) {
+    var r = el('div', 'row'); r.tabIndex = 0; r.setAttribute('role', 'button');
+    r.appendChild(coverEl(b));
+    var mid = el('div'); mid.style.minWidth = '0';
+    mid.appendChild(el('div', 't', b.title || '(no name)'));
+    var m = el('div', 'meta');
+    if (b.author) m.appendChild(authorBtn(b.author));
+    if (b.category) m.appendChild(el('span', null, b.category));
+    if (b.location) m.appendChild(el('span', null, '⌂ ' + b.location));
+    if (b.rating) m.appendChild(el('span', null, '★'.repeat(b.rating)));
+    mid.appendChild(m); r.appendChild(mid);
+    var side = el('div', 'side');
+    var p = el('span', 'pill ' + (b.wish ? 'wish' : (b.status || 'Not').split(' ')[0]), b.wish ? 'Wish list' : (b.status || 'Not read'));
+    side.appendChild(p);
+    if ((b.formats || []).length) { var c = el('div', 'chips'); b.formats.forEach(function (f) { c.appendChild(el('span', 'chip', f)); }); side.appendChild(c); }
+    r.appendChild(side);
+    r.addEventListener('click', function () { openView(b.id); });
+    r.addEventListener('keydown', function (e) { if (e.key === 'Enter') openView(b.id); });
+    return r;
+  }
+
+  function fillSelect(sel, values, first) {
+    var keep = sel.value; sel.textContent = '';
+    var o = el('option', null, first); o.value = ''; sel.appendChild(o);
+    values.forEach(function (v) { var x = el('option', null, v); x.value = v; sel.appendChild(x); });
+    sel.value = values.indexOf(keep) >= 0 ? keep : '';
+  }
+  function allFormats() { return uniq(FORMATS.concat([].concat.apply([], BOOKS.map(function (b) { return b.formats || []; })))); }
+
+  function drawFilters() {
+    fillSelect($('f-cat'), uniq([].concat.apply([], BOOKS.map(function (b) { return splitList(b.category); }))), 'Every category');
+    fillSelect($('f-loc'), uniq([].concat.apply([], BOOKS.map(function (b) { return splitList(b.location); }))), 'Everywhere');
+    fillSelect($('f-lang'), uniq(LANGS.concat(BOOKS.map(function (b) { return b.language; }))), 'Any language');
+    var box = $('f-fmt-box'); box.textContent = '';
+    allFormats().forEach(function (f) {
+      var l = el('label'); var c = el('input'); c.type = 'checkbox'; c.checked = FMT.indexOf(f) >= 0;
+      c.addEventListener('change', function () { FMT = c.checked ? FMT.concat(f) : FMT.filter(function (x) { return x !== f; }); render(); });
+      l.appendChild(c); l.appendChild(document.createTextNode(f)); box.appendChild(l);
+    });
+    $('f-fmt-said').textContent = FMT.length ? FMT.join(' / ') : 'Every format';
+    $('f-clear').classList.toggle('hidden', !anyFilter());
+  }
+
+  function drawTabs() {
+    var base = filtered(true);
+    var n = function (fn) { return base.filter(fn).length; };
+    var list = [
+      { k: 'all', l: 'All', n: base.length },
+      { k: 'reading', l: 'Reading', n: n(function (b) { return b.status === 'Reading'; }) },
+      { k: 'read', l: 'Read', n: n(function (b) { return b.status === 'Read'; }) },
+      { k: 'unread', l: 'Not read yet', n: n(function (b) { return b.status !== 'Read' && b.status !== 'Reading' && !b.wish; }) },
+      { k: 'wish', l: 'Wish list', n: n(function (b) { return !!b.wish; }) },
+      { k: 'where', l: 'Where they are' },
+      { k: 'authors', l: 'By author' },
+    ];
+    var bar = $('tabbar'); bar.textContent = '';
+    var add = el('button', 'act', '+ Add a book'); add.type = 'button'; add.addEventListener('click', function () { openEdit(null); }); bar.appendChild(add);
+    list.forEach(function (t) {
+      var b = el('button', t.k === TAB ? 'on' : '', t.l); b.type = 'button';
+      if (t.n != null) b.appendChild(el('span', 'count', String(t.n)));
+      b.addEventListener('click', function () { TAB = t.k; try { localStorage.setItem('bookshelf-tab', TAB); } catch (e) {} render(); });
+      bar.appendChild(b);
+    });
+  }
+
+  function render() {
+    drawFilters(); drawTabs();
+    var box = $('list'); box.textContent = '';
+    var empty = $('empty');
+    $('sub').textContent = BOOKS.length ? BOOKS.length + (BOOKS.length === 1 ? ' book' : ' books') + ' · ' +
+      BOOKS.filter(function (b) { return b.status === 'Read'; }).length + ' read' : 'Your library';
+
+    if (TAB === 'where') {
+      var counts = new Map();
+      filtered(true).forEach(function (b) {
+        var places = splitList(b.location); if (!places.length) places = ['(not recorded)'];
+        places.forEach(function (p) { counts.set(p, (counts.get(p) || 0) + 1); });
+      });
+      var rows = Array.from(counts.entries()).sort(function (a, b) { return (a[0] === '(not recorded)') - (b[0] === '(not recorded)') || b[1] - a[1]; });
+      rows.forEach(function (r) {
+        var s = el('div', 'simple'); s.appendChild(el('span', 't', r[0])); s.appendChild(el('span', 'count', r[1] + (r[1] === 1 ? ' book' : ' books')));
+        s.addEventListener('click', function () { if (r[0] !== '(not recorded)') { $('f-loc').value = r[0]; } TAB = 'all'; render(); });
+        box.appendChild(s);
+      });
+      empty.textContent = 'No books yet.'; empty.classList.toggle('hidden', rows.length > 0);
+      $('said').textContent = rows.length + ' places';
+      return;
+    }
+    if (TAB === 'authors') {
+      var m = new Map();
+      filtered(true).forEach(function (b) { if (b.author) { var k = fold(b.author); var v = m.get(k) || { name: b.author, n: 0 }; v.n++; m.set(k, v); } });
+      var authors = Array.from(m.values()).filter(function (a) { return a.n > 1; }).sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); });
+      authors.forEach(function (a) {
+        var s = el('div', 'simple'); s.appendChild(el('span', 't', a.name)); s.appendChild(el('span', 'count', a.n + ' books'));
+        s.addEventListener('click', function () { showAuthor(a.name); });
+        box.appendChild(s);
+      });
+      empty.textContent = 'No author has more than one book yet. Tap any author’s name on a book to see their books.';
+      empty.classList.toggle('hidden', authors.length > 0);
+      $('said').textContent = authors.length + ' authors with more than one book';
+      return;
+    }
+    var list = filtered(false);
+    list.forEach(function (b) { box.appendChild(bookRow(b)); });
+    var q = $('q').value.trim();
+    empty.textContent = !BOOKS.length ? 'Your shelf is empty. Press “+ Add a book”, or Import a spreadsheet.'
+      : q ? 'Nothing matches “' + q + '”. Try fewer words.' : 'Nothing here.';
+    empty.classList.toggle('hidden', list.length > 0);
+    var picked = [];
+    if (AUTHOR) picked.push('by ' + AUTHOR);
+    if ($('f-cat').value) picked.push($('f-cat').value);
+    if (FMT.length) picked.push(FMT.join(' / '));
+    if ($('f-loc').value) picked.push($('f-loc').value);
+    if ($('f-lang').value) picked.push($('f-lang').value);
+    if (q) picked.push('“' + q + '”');
+    $('said').textContent = list.length + (list.length === 1 ? ' book' : ' books') + (picked.length ? '  ·  ' + picked.join('  ·  ') : '');
+  }
+
+  ['q'].forEach(function (id) { $(id).addEventListener('input', render); });
+  ['f-cat', 'f-loc', 'f-lang'].forEach(function (id) { $(id).addEventListener('change', render); });
+  $('f-clear').addEventListener('click', function () { $('q').value = ''; $('f-cat').value = ''; $('f-loc').value = ''; $('f-lang').value = ''; FMT = []; AUTHOR = ''; render(); });
+  document.addEventListener('click', function (e) { var d = $('f-fmt-wrap'); if (d.open && !d.contains(e.target)) d.open = false; });
+
+  /* ---------------- summary text: "Title Case" line = heading, "- " line = bullet ---------------- */
+  function renderSummary(box, text) {
+    var ul = null;
+    String(text || '').split(/\r?\n/).forEach(function (line) {
+      var s = line.trim();
+      if (!s) { ul = null; return; }
+      if (/^[-*•]\s+/.test(s)) { if (!ul) { ul = el('ul'); box.appendChild(ul); } ul.appendChild(el('li', null, s.replace(/^[-*•]\s+/, ''))); return; }
+      ul = null;
+      var isHead = s.length < 70 && !/[.!?:]$/.test(s) && s.split(/\s+/).every(function (w) { return !/^[a-z]/.test(w) || /^(a|an|the|of|and|or|in|on|to|for|with|at|by|from)$/.test(w); });
+      box.appendChild(el(isHead ? 'h4' : 'p', null, s.replace(/^#+\s*/, '')));
+    });
+  }
+
+  /* ---------------- sheet: view a book ---------------- */
+  var SHADE = null;
+  function closeSheet() { if (SHADE) { SHADE.remove(); SHADE = null; } }
+  function sheet(title, tip) {
+    closeSheet();
+    var sh = el('div', 'shade'); var s = el('div', 'sheet'); s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true');
+    var hd = el('div', 'hd'); hd.appendChild(el('h2', null, title)); if (tip) hd.appendChild(el('p', 'tip', tip));
+    var body = el('div', 'body'); var ft = el('div', 'ft');
+    s.appendChild(hd); s.appendChild(body); s.appendChild(ft); sh.appendChild(s);
+    sh.addEventListener('click', function (e) { if (e.target === sh) closeSheet(); });
+    document.body.appendChild(sh); SHADE = sh;
+    return { body: body, ft: ft, hd: hd };
+  }
+  function fmtDate(d) { if (!d) return ''; var p = d.split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d; }
+
+  function openView(id) {
+    var b = BOOKS.find(function (x) { return x.id === id; }); if (!b) return;
+    var s = sheet(b.title || '(no name)');
+    var top = el('div', 'viewtop'); top.appendChild(coverEl(b, 'bigcover'));
+    var right = el('div'); right.style.minWidth = '0';
+    if (b.author) { var ap = el('p', null, 'by '); ap.style.margin = '0 0 6px'; ap.appendChild(authorBtn(b.author)); right.appendChild(ap); }
+    right.appendChild(el('span', 'pill ' + (b.wish ? 'wish' : (b.status || 'Not').split(' ')[0]), b.wish ? 'Wish list' : (b.status || 'Not read')));
+    if (b.rating) { var st = el('div', null, '★'.repeat(b.rating) + '☆'.repeat(5 - b.rating)); st.style.cssText = 'color:var(--warn);margin-top:6px;font-size:18px'; right.appendChild(st); }
+    top.appendChild(right); s.body.appendChild(top);
+    var kv = el('div', 'kv');
+    [['Category', b.category], ['Language', b.language], ['Format', (b.formats || []).join(', ')], ['Where it is', b.location],
+     ['Started', fmtDate(b.startedOn)], ['Finished', fmtDate(b.finishedOn)]].forEach(function (p) {
+      if (!p[1]) return; var d = el('div'); d.appendChild(el('span', null, p[0])); d.appendChild(document.createTextNode(p[1])); kv.appendChild(d);
+    });
+    if (kv.childNodes.length) s.body.appendChild(kv);
+    if (b.summary) { var sm = el('div', 'summary'); sm.appendChild(el('div', 'lbl', 'Summary')); renderSummary(sm, b.summary); s.body.appendChild(sm); }
+    if (b.notes) { var nt = el('div', 'summary'); nt.appendChild(el('div', 'lbl', 'Your notes')); renderSummary(nt, b.notes); s.body.appendChild(nt); }
+    var close = el('button', 'btn ghost', 'Close'); close.addEventListener('click', closeSheet);
+    var edit = el('button', 'btn pri', 'Edit'); edit.addEventListener('click', function () { openEdit(b.id); });
+    s.ft.appendChild(close); s.ft.appendChild(edit);
+    edit.focus();
+  }
+
+  /* ---------------- sheet: add / edit ---------------- */
+  function field(label, input, full) { var f = el('div', 'f' + (full ? ' full' : '')); var l = el('label', null, label); if (input.id) l.htmlFor = input.id; f.appendChild(l); f.appendChild(input); return f; }
+  function inp(id, val, attrs) { var i = el('input'); i.id = id; i.value = val || ''; Object.keys(attrs || {}).forEach(function (k) { i.setAttribute(k, attrs[k]); }); return i; }
+  function datalist(id, values) { var d = el('datalist'); d.id = id; values.forEach(function (v) { var o = el('option'); o.value = v; d.appendChild(o); }); return d; }
+
+  function resizeImage(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(); var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var w = 240, h = Math.round(img.height * (w / img.width)); if (h > 340) { h = 340; w = Math.round(img.width * (h / img.height)); }
+        var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('That file is not a picture.')); };
+      img.src = url;
+    });
+  }
+
+  function openEdit(id) {
+    var b = id ? BOOKS.find(function (x) { return x.id === id; }) : null;
+    var d = Object.assign({ title: '', author: '', category: '', language: 'English', formats: [], location: '', status: 'Not read', wish: false, rating: 0,
+      startedOn: '', finishedOn: '', summary: '', notes: '', cover: null }, b || {});
+    var s = sheet(b ? 'Edit the book' : 'Add a book', 'Only the name is needed. The rest can wait.');
+    var B = s.body;
+
+    // cover
+    var cp = el('div', 'coverpick'); var cv = el('div'); cv.appendChild(coverEl(d));
+    var pick = el('button', 'btn sm ghost', d.cover ? 'Change the cover' : 'Add a cover photo'); pick.type = 'button';
+    var drop = el('button', 'btn sm ghost' + (d.cover ? '' : ' hidden'), 'Remove cover'); drop.type = 'button';
+    pick.addEventListener('click', function () { $('file-cover').value = ''; $('file-cover').onchange = function () {
+      var f = $('file-cover').files[0]; if (!f) return;
+      resizeImage(f).then(function (url) { d.cover = url; cv.textContent = ''; cv.appendChild(coverEl(d)); drop.classList.remove('hidden'); pick.textContent = 'Change the cover'; }).catch(function (e) { toast(e.message); });
+    }; $('file-cover').click(); });
+    drop.addEventListener('click', function () { d.cover = null; cv.textContent = ''; cv.appendChild(coverEl(d)); drop.classList.add('hidden'); pick.textContent = 'Add a cover photo'; });
+    cp.appendChild(cv); var cpb = el('div', 'toggles'); cpb.appendChild(pick); cpb.appendChild(drop); cp.appendChild(cpb);
+    var cf = el('div', 'f full'); cf.appendChild(el('label', null, 'Cover')); cf.appendChild(cp); B.appendChild(cf);
+
+    var dupe = el('div', 'warnbox hidden');
+    var title = inp('e-title', d.title, { maxlength: 300, autocomplete: 'off' });
+    title.addEventListener('input', function () {
+      var t = fold(title.value.trim()); var hit = t && BOOKS.find(function (x) { return x.id !== id && fold(x.title) === t; });
+      dupe.classList.toggle('hidden', !hit); if (hit) dupe.textContent = 'You already have “' + hit.title + '”' + (hit.author ? ' by ' + hit.author : '') + (hit.location ? ', at ' + hit.location : '') + '.';
+    });
+    B.appendChild(field('Book name', title, true)); B.appendChild(dupe);
+    var author = inp('e-author', d.author, { maxlength: 200, list: 'dl-authors' });
+    B.appendChild(field('Author', author)); B.appendChild(datalist('dl-authors', uniq(BOOKS.map(function (x) { return x.author; }))));
+    var cat = inp('e-cat', d.category, { maxlength: 200, list: 'dl-cats' });
+    B.appendChild(field('Category', cat)); B.appendChild(datalist('dl-cats', uniq([].concat.apply([], BOOKS.map(function (x) { return splitList(x.category); })))));
+    var lang = inp('e-lang', d.language, { maxlength: 40, list: 'dl-langs' });
+    B.appendChild(field('Language', lang)); B.appendChild(datalist('dl-langs', uniq(LANGS.concat(BOOKS.map(function (x) { return x.language; })))));
+
+    var status = el('select'); status.id = 'e-status'; STATUSES.forEach(function (v) { var o = el('option', null, v); o.value = v; status.appendChild(o); }); status.value = d.status || 'Not read';
+    B.appendChild(field('Read status', status));
+
+    // formats: tap, not type, so the spelling never splits one format into two
+    var fmts = (d.formats || []).slice();
+    var tg = el('div', 'toggles');
+    function drawFmts() {
+      tg.textContent = '';
+      uniq(allFormats().concat(fmts)).forEach(function (f) {
+        var t = el('button', fmts.indexOf(f) >= 0 ? 'on' : '', f); t.type = 'button'; t.setAttribute('aria-pressed', fmts.indexOf(f) >= 0);
+        t.addEventListener('click', function () { fmts = fmts.indexOf(f) >= 0 ? fmts.filter(function (x) { return x !== f; }) : fmts.concat(f); drawFmts(); });
+        tg.appendChild(t);
+      });
+    }
+    drawFmts();
+    var fnew = inp('e-fmt-new', '', { maxlength: 40, placeholder: 'Something else? Type it and press Enter' });
+    fnew.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); var v = fnew.value.trim(); if (v && fmts.indexOf(v) < 0) fmts.push(v); fnew.value = ''; drawFmts(); } });
+    var ff = el('div', 'f full'); ff.appendChild(el('label', null, 'Format — it can be more than one')); ff.appendChild(tg); ff.appendChild(fnew); B.appendChild(ff);
+
+    var loc = inp('e-loc', d.location, { maxlength: 200, list: 'dl-locs', placeholder: 'e.g. Home study, Office rack' });
+    B.appendChild(field('Where it is', loc)); B.appendChild(datalist('dl-locs', uniq([].concat.apply([], BOOKS.map(function (x) { return splitList(x.location); })))));
+    var wish = el('select'); wish.id = 'e-wish'; [['0', 'No — I have it'], ['1', 'Yes — I want to buy it']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; wish.appendChild(x); }); wish.value = d.wish ? '1' : '0';
+    B.appendChild(field('On the wish list?', wish));
+    var started = inp('e-started', d.startedOn, { type: 'date' }); var finished = inp('e-finished', d.finishedOn, { type: 'date' });
+    B.appendChild(field('Started', started)); B.appendChild(field('Finished', finished));
+    status.addEventListener('change', function () { var today = new Date().toISOString().slice(0, 10);
+      if (status.value === 'Reading' && !started.value) started.value = today;
+      if (status.value === 'Read' && !finished.value) finished.value = today; });
+
+    var rating = d.rating || 0; var stars = el('div', 'stars');
+    function drawStars() { stars.textContent = ''; for (var i = 1; i <= 5; i++) (function (i) {
+      var s2 = el('button', i <= rating ? 'on' : '', '★'); s2.type = 'button'; s2.setAttribute('aria-label', i + ' of 5');
+      s2.addEventListener('click', function () { rating = rating === i ? 0 : i; drawStars(); }); stars.appendChild(s2); })(i); }
+    drawStars();
+    var rf = el('div', 'f full'); rf.appendChild(el('label', null, 'Your rating')); rf.appendChild(stars); B.appendChild(rf);
+
+    var summary = el('textarea'); summary.id = 'e-summary'; summary.rows = 7; summary.maxLength = 12000; summary.value = d.summary || '';
+    summary.placeholder = 'A line on its own in Title Case becomes a heading. A line starting with - becomes a bullet.';
+    var sf = field('Summary', summary, true);
+    var aiBtn = el('button', 'btn sm ghost hidden', 'Get summary from Claude'); aiBtn.type = 'button'; sf.appendChild(aiBtn);
+    B.appendChild(sf);
+    if (window.claude && window.claude.use) window.claude.use('sample').then(function (sample) {
+      if (!sample) return; aiBtn.classList.remove('hidden');
+      aiBtn.addEventListener('click', function () {
+        if (!title.value.trim()) { toast('Write the book name first.'); return; }
+        if (summary.value.trim() && !aiBtn.dataset.sure) { aiBtn.dataset.sure = '1'; aiBtn.textContent = 'This replaces your summary — press again'; return; }
+        aiBtn.disabled = true; aiBtn.textContent = 'Writing…'; delete aiBtn.dataset.sure;
+        var prompt = 'Write a summary of the book "' + title.value.trim() + '"' + (author.value.trim() ? ' by ' + author.value.trim() : '') +
+          ' for a reader’s personal library card. 180 to 280 words. Format as plain text only: a few short headings, each on its own line in Title Case with no punctuation at the end, ' +
+          'followed by short paragraphs or bullet lines starting with "- ". Cover what the book is about, its key ideas, and who should read it. ' +
+          'No markdown symbols other than "- " bullets. If you do not know this exact book, reply with one line saying so and nothing else.';
+        sample(prompt, { onText: function (p) { summary.value = p.text; } }).then(function (r) { summary.value = r.text.trim(); })
+          .catch(function (e) { if (e && e.code === 'not_granted') aiBtn.classList.add('hidden'); else toast('Claude could not write it just now. Try again in a minute.'); })
+          .then(function () { aiBtn.disabled = false; aiBtn.textContent = 'Get summary from Claude'; });
+      });
+    });
+    var notes = el('textarea'); notes.id = 'e-notes'; notes.rows = 3; notes.maxLength = 4000; notes.value = d.notes || '';
+    notes.placeholder = 'Anything of your own — where you got it, who recommended it.';
+    B.appendChild(field('Your notes', notes, true));
+
+    // footer
+    if (b) {
+      var rm = el('button', 'btn ghost sm danger left', 'Remove from the library'); rm.type = 'button';
+      rm.addEventListener('click', function () {
+        var c = el('div', 'confirm left', 'Remove “' + (b.title || '') + '” for good?');
+        var yes = el('button', 'btn sm pri', 'Yes, remove'); var no = el('button', 'btn sm ghost', 'Keep it');
+        yes.addEventListener('click', function () { store.remove(b.id).then(function () { closeSheet(); toast('Removed.'); }).catch(function () { toast('Could not remove it. Try again.'); }); });
+        no.addEventListener('click', function () { c.replaceWith(rm); });
+        c.appendChild(yes); c.appendChild(no); rm.replaceWith(c);
+      });
+      s.ft.appendChild(rm);
+    }
+    var cancel = el('button', 'btn ghost', 'Cancel'); cancel.addEventListener('click', function () { b ? openView(b.id) : closeSheet(); });
+    var save = el('button', 'btn pri', 'Save');
+    function doSave() {
+      var name = title.value.trim(); if (!name) { toast('The book needs a name.'); title.focus(); return; }
+      var now = new Date().toISOString();
+      var data = {
+        title: name.slice(0, 300), author: author.value.trim().slice(0, 200), category: splitList(cat.value).join(', ').slice(0, 200),
+        language: lang.value.trim().slice(0, 40), formats: fmts.slice(0, 12), location: splitList(loc.value).join(', ').slice(0, 200),
+        status: status.value, wish: wish.value === '1', rating: rating, startedOn: started.value || '', finishedOn: finished.value || '',
+        summary: summary.value.slice(0, 12000), notes: notes.value.slice(0, 4000), cover: d.cover || null,
+        createdAt: (b && b.createdAt) || now, updatedAt: now,
+      };
+      var bid = b ? b.id : newId();
+      save.disabled = true;
+      store.save(bid, data).then(function () { toast(b ? 'Saved.' : 'Added to your shelf.'); openView(bid); })
+        .catch(function (e) { save.disabled = false; toast(e && e.code === 'invalid_argument' ? 'Too big to save — try a smaller cover photo.' : 'Could not save. Try again.'); });
+    }
+    save.addEventListener('click', doSave);
+    s.ft.appendChild(cancel); s.ft.appendChild(save);
+    SHADE.addEventListener('keydown', function (e) { if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); doSave(); } });
+    title.focus();
+  }
+
+  /* ---------------- export / import ---------------- */
+  var COLS = [['title', 'Book name'], ['author', 'Author'], ['category', 'Category'], ['language', 'Language'], ['formats', 'Format'],
+    ['location', 'Where it is'], ['status', 'Read status'], ['wish', 'Wish list'], ['rating', 'Rating'], ['startedOn', 'Started'],
+    ['finishedOn', 'Finished'], ['summary', 'Summary'], ['notes', 'Notes']];
+  function csvCell(v) { var s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  function toCsv(list) {
+    var lines = [COLS.map(function (c) { return c[1]; }).join(',')];
+    list.forEach(function (b) { lines.push(COLS.map(function (c) {
+      var v = b[c[0]]; if (c[0] === 'formats') v = (v || []).join(', '); if (c[0] === 'wish') v = v ? 'Yes' : 'No'; if (c[0] === 'rating') v = v || '';
+      return csvCell(v); }).join(',')); });
+    return '﻿' + lines.join('\r\n');
+  }
+  function saveFile(name, data, type) {
+    var go = function (dl) {
+      if (dl) return dl.save({ filename: name, data: data }).then(function () { toast('Saved ' + name + '.'); }).catch(function (e) { if (!e || e.code !== 'declined') toast('Could not save the file.'); });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: type })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    };
+    if (window.claude && window.claude.use) window.claude.use('downloads').then(go, function () { go(null); }); else go(null);
+  }
+  $('b-export').addEventListener('click', function () {
+    var s = sheet('Export your library', 'Excel opens the CSV. The backup file brings everything back, covers included, through Import.');
+    var list = anyFilter() ? filtered(false) : BOOKS;
+    s.body.appendChild(el('p', 'tip', anyFilter() ? 'Only the ' + list.length + ' books in your current search and filters.' : 'All ' + list.length + ' books.'));
+    var c = el('button', 'btn ghost', 'Cancel'); c.addEventListener('click', closeSheet);
+    var j = el('button', 'btn ghost', 'Backup file (.json)'); j.addEventListener('click', function () { saveFile('bookshelf-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify({ app: 'bookshelf', version: 1, books: list }, null, 1), 'application/json'); });
+    var x = el('button', 'btn pri', 'Excel (.csv)'); x.addEventListener('click', function () { saveFile('bookshelf-' + new Date().toISOString().slice(0, 10) + '.csv', toCsv(list), 'text/csv'); });
+    s.ft.appendChild(c); s.ft.appendChild(j); s.ft.appendChild(x);
+  });
+
+  function parseCsv(text) {
+    var rows = [], row = [], cell = '', q = false;
+    text = text.replace(/^﻿/, '');
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+  }
+  // Any spreadsheet works: columns are matched by their heading, in any order.
+  var GUESS = { title: /^(book ?name|title|name|book)$/, author: /^(author|writer|by)$/, category: /^(category|genre|subject|type)$/, language: /^(language|lang)$/,
+    formats: /^(format|formats|platform|platforms|medium)$/, location: /^(where( it is)?|location|shelf|place|kept at)$/, status: /^(read ?status|status)$/,
+    wish: /^(wish ?list|wishlist|to buy)$/, rating: /^(rating|stars)$/, startedOn: /^(started|start date|started on)$/, finishedOn: /^(finished|finish date|finished on|completed)$/,
+    summary: /^(summary)$/, notes: /^(notes?|remarks?|comments?)$/ };
+  function toIso(v) { v = String(v || '').trim(); var m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(v); if (m) return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : ''; }
+  function normStatus(v) { v = fold(v); return /^read|^done|^finish|^yes$/.test(v) ? 'Read' : /reading|progress/.test(v) ? 'Reading' : 'Not read'; }
+  function fromRow(o) {
+    return { title: String(o.title || '').trim().slice(0, 300), author: String(o.author || '').trim().slice(0, 200), category: splitList(o.category).join(', '),
+      language: String(o.language || '').trim().slice(0, 40), formats: Array.isArray(o.formats) ? o.formats : splitList(o.formats),
+      location: splitList(o.location).join(', '), status: STATUSES.indexOf(o.status) >= 0 ? o.status : normStatus(o.status),
+      wish: o.wish === true || /^(yes|y|1|true)$/i.test(String(o.wish || '').trim()), rating: Math.max(0, Math.min(5, parseInt(o.rating, 10) || 0)),
+      startedOn: toIso(o.startedOn), finishedOn: toIso(o.finishedOn), summary: String(o.summary || '').slice(0, 12000), notes: String(o.notes || '').slice(0, 4000),
+      cover: typeof o.cover === 'string' && o.cover.indexOf('data:image/') === 0 ? o.cover : null };
+  }
+  $('b-import').addEventListener('click', function () { $('file-import').value = ''; $('file-import').click(); });
+  $('file-import').addEventListener('change', function () {
+    var f = $('file-import').files[0]; if (!f) return;
+    f.text().then(function (text) {
+      var items = [];
+      if (/\.json$/i.test(f.name) || /^\s*[\[{]/.test(text)) {
+        var j = JSON.parse(text); items = (Array.isArray(j) ? j : j.books || []).map(fromRow);
+      } else {
+        var rows = parseCsv(text); if (rows.length < 2) throw new Error('empty');
+        var map = rows[0].map(function (h) { var k = fold(h).trim(); return Object.keys(GUESS).find(function (g) { return GUESS[g].test(k); }) || null; });
+        if (map.indexOf('title') < 0) throw new Error('no-title');
+        items = rows.slice(1).map(function (r) { var o = {}; map.forEach(function (k, i) { if (k) o[k] = r[i]; }); return fromRow(o); });
+      }
+      items = items.filter(function (x) { return x.title; });
+      var have = new Set(BOOKS.map(function (b) { return fold(b.title) + '|' + fold(b.author); }));
+      var fresh = items.filter(function (x) { var k = fold(x.title) + '|' + fold(x.author); if (have.has(k)) return false; have.add(k); return true; });
+      var s = sheet('Import books', f.name);
+      s.body.appendChild(el('p', 'tip', items.length + ' books found. ' + fresh.length + ' are new' + (items.length - fresh.length ? ', ' + (items.length - fresh.length) + ' you already have will be skipped.' : '.')));
+      var c = el('button', 'btn ghost', 'Cancel'); c.addEventListener('click', closeSheet);
+      var go = el('button', 'btn pri', 'Add ' + fresh.length + ' books'); go.disabled = !fresh.length;
+      go.addEventListener('click', function () {
+        go.disabled = true; var now = new Date().toISOString(), i = 0;
+        (function next() {
+          if (i >= fresh.length) { closeSheet(); toast(fresh.length + ' books added.'); return; }
+          go.textContent = 'Adding ' + (i + 1) + ' of ' + fresh.length + '…';
+          store.save(newId(), Object.assign(fresh[i], { createdAt: now, updatedAt: now })).then(function () { i++; next(); })
+            .catch(function () { toast('Stopped at book ' + (i + 1) + '. The ones before it are saved.'); closeSheet(); });
+        })();
+      });
+      s.ft.appendChild(c); s.ft.appendChild(go);
+    }).catch(function (e) {
+      toast(e && e.message === 'no-title' ? 'The first row needs a column called Book name or Title.' : 'That file could not be read. Use a CSV or a Bookshelf backup.');
+    });
+  });
+
+  /* ---------------- keys ---------------- */
+  $('b-add').addEventListener('click', function () { openEdit(null); });
+  $('b-drive').addEventListener('click', openDrive);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && SHADE) { closeSheet(); return; }
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '');
+    if (typing || SHADE || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === '/') { e.preventDefault(); $('q').focus(); }
+    else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openEdit(null); }
+  });
+
+  render();
+  startDb();
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(function () {});
+})();
+</script>
+</body>
+</html>
